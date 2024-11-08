@@ -23,8 +23,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	_ = storage
+	id, err := storage.SaveURL("https://yandex.ru", "ya")
 
+	if err != nil {
+		log.Error("failed to save in db", logger.Err(err))
+		os.Exit(1)
+	}
+
+	log.Info("saved url", slog.Int64("id", id))
+
+	url, err := storage.GetURL("google")
+
+	log.Info("get url", slog.String("url", url))
+	_ = storage
 }
 
 const (

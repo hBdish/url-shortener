@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"url-shortener/internal/config"
-
-	_ "github.com/lib/pq"
 )
 
 type Storage struct {
@@ -25,7 +23,7 @@ func New(dbCnf config.Db) (*Storage, error) {
 
 	stmt, err := db.Prepare(`
 	CREATE TABLE IF NOT EXISTS url(
-    	id INTEGER PRIMARY KEY ,
+    	id SERIAL PRIMARY KEY ,
     	alias TEXT NOT NULL UNIQUE,
     	url TEXT NOT NULL
 		);
@@ -42,4 +40,30 @@ func New(dbCnf config.Db) (*Storage, error) {
 	}
 
 	return &Storage{db: db}, nil
+}
+
+func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
+	const fn = "storage.postgres.SaveURL"
+
+	var id int64
+	err := s.db.QueryRow("INSERT INTO url(url, alias) VALUES ($1, $2) RETURNING id", urlToSave, alias).Scan(&id)
+
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", fn, err)
+	}
+
+	return id, err
+}
+
+func (s *Storage) GetURL(alias string) (string, error) {
+	const fn = "storage.postgres.GetURL"
+
+	var url string
+	err := s.db.QueryRow("SELECT url FROM url WHERE alias = $1", alias).Scan(&url)
+
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", fn, err)
+	}
+
+	return url, err
 }
