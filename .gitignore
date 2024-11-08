@@ -1,0 +1,6 @@
+*dev.yaml
+*stage.yaml
+*prod.yaml
+
+*.idea
+*DS_Store
